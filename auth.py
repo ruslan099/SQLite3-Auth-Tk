@@ -1,5 +1,6 @@
 from tkinter import *
 import sqlite3
+from class_database import Db
 
 def app():
     main = Tk()
@@ -8,19 +9,18 @@ def app():
     main.resizable(False, False)
     main.configure(bg='#a2ab87')
 
-    con = sqlite3.connect("database/Users.db")
-    curr = con.cursor()
+    db = Db("database/Users.db")
 
-    curr.execute("""CREATE TABLE IF NOT EXISTS Users(
-        id INTEGER PRIMARY KEY,
-        First_name TEXT,
-        Last_name TEXT,
-        Email TEXT,
-        Login TEXT UNIQUE,
-        Password TEXT NOT NULL);
-        """)
+    # curr.execute("""CREATE TABLE IF NOT EXISTS Users(
+    #     id INTEGER PRIMARY KEY,
+    #     First_name TEXT,
+    #     Last_name TEXT,
+    #     Email TEXT,
+    #     Login TEXT UNIQUE,
+    #     Password TEXT NOT NULL);
+    #     """)
 
-    con.commit()
+    # con.commit()
 
     def registration():
         main.destroy()
@@ -99,25 +99,15 @@ def app():
         login_error.pack_forget()
         login_error.configure(text="Неверный логин/пароль", bg='#a2ab87', fg='red', font=('Courier', 12, 'bold'))
 
-        con = sqlite3.connect("database/Users.db")
-        curr = con.cursor()
-
         login = inplogin.get()
         password = inppass.get()
-        res = curr.execute("SELECT * FROM Users WHERE Login=? AND Password=?;",(login, password)).fetchall()
-        print(res)
-        print(bool(len(res)))
 
-
-        if bool(len(res)) is True:      #Если равно 1(True), значит запись с таким же логином и паролем есть в БД.(УСПЕШНО)
+        if bool(len(db.check_valid(login, password))) is True:      #Если равно 1(True), значит запись с таким же логином и паролем есть в БД.(УСПЕШНО)
             login_okay.pack()
             but_log['text'] = 'В профиль!'
             
         else:
             login_error.pack()
-
-        curr.close()
-        con.close()
 
 
     login = Label(main, text="Логин:", bg='#a2ab87')
