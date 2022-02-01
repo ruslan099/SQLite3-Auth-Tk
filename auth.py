@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import messagebox
 import sqlite3
 from class_database import Db
 
@@ -9,18 +10,7 @@ def app():
     main.resizable(False, False)
     main.configure(bg='#a2ab87')
 
-    db = Db("database/Users.db")
-
-    # curr.execute("""CREATE TABLE IF NOT EXISTS Users(
-    #     id INTEGER PRIMARY KEY,
-    #     First_name TEXT,
-    #     Last_name TEXT,
-    #     Email TEXT,
-    #     Login TEXT UNIQUE,
-    #     Password TEXT NOT NULL);
-    #     """)
-
-    # con.commit()
+    db = Db("database/users.db")
 
     def registration():
         main.destroy()
@@ -49,10 +39,8 @@ def app():
 
             try:
                 if fname and sname and post_mail and nik and skip is not None:
-                    curr.execute("""INSERT INTO Users (First_name, Last_name, Email, Login, Password)
-                    VALUES (?, ?, ?, ?, ?);
-                    """,(fname, sname, post_mail, nik, skip))
-                    con.commit()
+                    #Добавление юзера в БД через метод класса class_database.py
+                    db.add_to_db(fname, sname, post_mail, nik, skip)        
                     success.pack()
                     but_reg['text'] = 'Авторизация'
                     but_reg.configure(bg="grey", command=app)
@@ -104,11 +92,54 @@ def app():
 
         if bool(len(db.check_valid(login, password))) is True:      #Если равно 1(True), значит запись с таким же логином и паролем есть в БД.(УСПЕШНО)
             login_okay.pack()
+            global res
+            res = db.check_valid(login, password)
             but_log['text'] = 'В профиль!'
+            but_log.configure(command=profile)
+            inplogin.configure(state='disabled')
+            inppass.configure(state='disabled')
             
         else:
             login_error.pack()
+    
+    def profile():
+        main.destroy()
+        win_profile = Tk()
+        win_profile.geometry('300x250')
+        win_profile.title(f'Профиль - {res[0][1]}')
+        win_profile.configure(bg='#a2ab87')
 
+        lbl_info = Label(win_profile, text="Информация о профиле", fg="black", bg="#a2ab87")
+        lbl_info.configure(font=('Courier', 14, 'bold'))
+        lbl_info.pack(pady=5)
+
+        lbl_name = Label(win_profile, text=f"Имя: {res[0][1]}", fg="white", bg="#a2ab87")
+        lbl_name.configure(font=('Courier', 10, 'bold'))
+        lbl_name.pack(pady=2)
+        
+        lbl_surname = Label(win_profile, text=f"Фамилия: {res[0][2]}", fg="white", bg="#a2ab87")
+        lbl_surname.configure(font=('Courier', 10, 'bold'))
+        lbl_surname.pack(pady=2)
+
+        lbl_mail = Label(win_profile, text=f"Почта: {res[0][3]}", fg="white", bg="#a2ab87")
+        lbl_mail.configure(font=('Courier', 10, 'bold'))
+        lbl_mail.pack(pady=2)
+
+        lbl_login = Label(win_profile, text=f"Логин: {res[0][4]}", fg="white", bg="#a2ab87")
+        lbl_login.configure(font=('Courier', 10, 'bold'))
+        lbl_login.pack()
+
+        def delete_acc():
+            db.delete_account(res[0][0])
+            messagebox.showinfo("Информация", f"Аккаунт с логином {res[0][1]} был удален!")
+            win_profile.destroy()
+            main.mainloop()
+
+        but_del = Button(win_profile, text="Удалить аккаунт", bg="red", fg="white", borderwidth=3, width=20, height=2,
+        command=delete_acc)
+        but_del.pack(pady=20)
+
+        win_profile.mainloop()
 
     login = Label(main, text="Логин:", bg='#a2ab87')
     login.pack()
@@ -126,6 +157,7 @@ def app():
     reg.pack(pady=2)
 
     main.mainloop()
+
 
 if __name__ == '__main__':
     app()
